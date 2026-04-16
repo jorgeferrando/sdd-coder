@@ -1,0 +1,25 @@
+node_modules/
+dist/
+.env
+.env.local
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Test coverage
+coverage/
+
+# Docker volumes (local data)
+postgres-data/
+
+# Skip installing skills in git — they come from sdd-skills repo
+.claude/skills/

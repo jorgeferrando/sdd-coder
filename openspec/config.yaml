@@ -1,0 +1,20 @@
+project: sdd-coder
+created_at: "2026-04-16"
+
+paths:
+  specs: openspec/specs
+  changes: openspec/changes
+  archive: openspec/changes/archive
+  steering: openspec/steering
+
+steering:
+  project_skill: openspec/steering/project-skill.md
+
+environment:
+  runtimes:
+    - node: "24.11.1"
+  tools:
+    - git: "2.51.2"
+    - gh: "2.83.1"
+    - docker: "29.3.1"
+  mcps: []
