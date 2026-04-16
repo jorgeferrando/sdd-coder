@@ -7,9 +7,9 @@
     "build": "tsc",
     "test": "vitest run --passWithNoTests",
     "test:int": "vitest run --reporter=verbose --config vitest.integration.ts",
-    "lint": "biome check src/",
-    "fmt": "biome format --write src/",
-    "check": "biome check --write src/"
+    "lint": "biome check --no-errors-on-unmatched src/",
+    "fmt": "biome format --write --no-errors-on-unmatched src/",
+    "check": "biome check --write --no-errors-on-unmatched src/"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "latest",
