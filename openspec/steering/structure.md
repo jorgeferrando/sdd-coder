@@ -5,86 +5,118 @@
 ```
 sdd-coder/
 ├── src/
-│   ├── server.ts                  # Fastify setup, routes registration, static serving
-│   ├── routes/
-│   │   └── threads.ts             # REST endpoints: create thread, send message, stream
-│   ├── pipeline/
-│   │   ├── machine.ts             # Phase enum, transition rules, state types
-│   │   ├── runner.ts              # Orchestrator: process a message through the pipeline
-│   │   └── phases/
-│   │       ├── init.ts            # Bootstrap openspec/, generate steering, install specialists
-│   │       ├── intake.ts          # Parse request, detect ambiguity, gather context
-│   │       ├── propose.ts         # Generate proposal.md
-│   │       ├── spec.ts            # Generate specs/{domain}/spec.md
-│   │       ├── design.ts          # Generate design.md
-│   │       ├── tasks.ts           # Generate tasks.md
-│   │       └── apply.ts           # Implement tasks one by one with git commits
-│   ├── skills/
-│   │   ├── reader.ts              # Read skill instructions.md from /skills volume
-│   │   └── specialists.ts         # List, install, remove specialists
-│   ├── context/
-│   │   └── gatherer.ts            # Read steering, artifacts, repo structure, git history
-│   ├── llm/
-│   │   └── claude.ts              # Anthropic SDK wrapper, prompt building, JSON parsing
-│   ├── git/
-│   │   └── operations.ts          # Branch, commit, status, diff via child_process
-│   ├── db/
-│   │   ├── connection.ts          # pg Pool setup
-│   │   └── queries.ts             # Thread/message CRUD
-│   └── types.ts                   # Shared TypeScript types
+│   ├── server.ts                        # Composition root: wire deps, start Fastify
+│   ├── types/
+│   │   └── result.ts                    # Result<T,E>, ok(), err(), map, flatMap, match
+│   │
+│   ├── domain/                          # Pure business logic. ZERO external imports.
+│   │   ├── thread.ts                    # Thread entity, Phase type, status rules
+│   │   ├── phase.ts                     # Phase transition rules (pure functions)
+│   │   └── errors.ts                    # Domain error discriminated unions
+│   │
+│   ├── application/                     # Use cases. Imports domain + ports only.
+│   │   ├── run-phase.ts                 # Orchestrate one pipeline phase for a thread
+│   │   ├── advance-thread.ts            # Transition thread to next phase
+│   │   ├── create-thread.ts             # Initialise a new thread
+│   │   └── errors.ts                    # Application error discriminated unions
+│   │
+│   ├── ports/                           # Interfaces owned by application layer
+│   │   ├── thread-repository.ts         # CRUD for Thread
+│   │   ├── message-repository.ts        # CRUD for Message
+│   │   ├── llm-client.ts                # Call LLM, return structured result
+│   │   ├── skill-reader.ts              # Read skill/specialist instructions
+│   │   ├── context-gatherer.ts          # Read steering, artifacts, repo structure
+│   │   └── git-client.ts                # Branch, commit, status, diff
+│   │
+│   ├── infrastructure/                  # Implements ports. Imports pg, fastify, SDK, fs, etc.
+│   │   ├── db/
+│   │   │   ├── connection.ts            # pg Pool setup
+│   │   │   ├── pg-thread-repository.ts  # implements ThreadRepository
+│   │   │   └── pg-message-repository.ts # implements MessageRepository
+│   │   ├── llm/
+│   │   │   └── claude-client.ts         # implements LlmClient (Anthropic SDK)
+│   │   ├── skills/
+│   │   │   ├── file-skill-reader.ts     # implements SkillReader (reads /skills volume)
+│   │   │   └── specialist-manager.ts    # install/remove specialists in /repo
+│   │   ├── context/
+│   │   │   └── repo-context-gatherer.ts # implements ContextGatherer (reads /repo)
+│   │   ├── git/
+│   │   │   └── git-cli-client.ts        # implements GitClient (child_process)
+│   │   └── http/
+│   │       ├── server.ts                # Fastify instance, plugin registration
+│   │       ├── routes/
+│   │       │   └── threads.ts           # REST + SSE endpoints (unwrap Result → HTTP)
+│   │       └── static.ts                # Serve ui/ directory
+│   │
+│   └── pipeline/                        # Phase handlers (called by run-phase use case)
+│       ├── phases/
+│       │   ├── init.ts                  # Bootstrap openspec/, install specialists
+│       │   ├── intake.ts                # Parse request, detect ambiguity
+│       │   ├── propose.ts               # Generate proposal.md
+│       │   ├── spec.ts                  # Generate specs/{domain}/spec.md
+│       │   ├── design.ts                # Generate design.md
+│       │   ├── tasks.ts                 # Generate tasks.md
+│       │   └── apply.ts                 # Implement tasks with atomic commits
+│       └── prompt-builder.ts            # Assemble prompts from skill + context
+│
 ├── ui/
-│   ├── index.html                 # Chat UI shell
-│   ├── app.js                     # Vanilla JS: SSE client, message rendering, phase bar
-│   └── styles.css                 # Minimal dark theme
+│   ├── index.html                       # Chat UI shell
+│   ├── app.js                           # SSE client, message rendering, phase bar
+│   └── styles.css                       # Minimal dark theme
 ├── sql/
-│   └── init.sql                   # Schema: threads, messages
+│   └── init.sql                         # Schema: threads, messages
 ├── test/
-│   ├── pipeline/
-│   │   ├── machine.test.ts
-│   │   └── runner.test.ts
-│   ├── skills/
-│   │   ├── reader.test.ts
-│   │   └── specialists.test.ts
-│   ├── git/
-│   │   └── operations.test.ts
-│   └── fixtures/                  # Mock Claude JSON responses per phase
+│   ├── domain/                          # Pure unit tests — no mocks needed
+│   ├── application/                     # Unit tests — mock ports via test doubles
+│   ├── infrastructure/                  # Integration tests — real DB, real FS
+│   └── fixtures/                        # Mock Claude JSON responses per phase
 ├── Dockerfile
 ├── docker-compose.yml
 ├── package.json
 ├── tsconfig.json
+├── biome.json
 ├── .env.example
 └── README.md
 ```
 
 ## Layers & responsibilities
 
-| Layer | Directory | Responsibility |
-|---|---|---|
-| HTTP | `src/routes/` | Receive messages, stream responses. No business logic. |
-| Pipeline | `src/pipeline/` | State machine, phase orchestration, transition rules. |
-| Phases | `src/pipeline/phases/` | One file per phase. Calls LLM, returns result. No I/O directly. |
-| Skills | `src/skills/` | Read skill instructions and specialist files from the `/skills` volume. |
-| Context | `src/context/` | Read the target repo: structure, steering, artifacts, git history. |
-| LLM | `src/llm/` | Claude API calls, prompt construction, JSON response parsing. |
-| Git | `src/git/` | All git/gh operations on the target repo at `/repo`. |
-| DB | `src/db/` | Thread and message persistence in Postgres. |
-| UI | `ui/` | Static chat interface served by Fastify. No framework, no build step. |
+| Layer | Directory | Can import from | Responsibility |
+|---|---|---|---|
+| Domain | `src/domain/` | `src/types/` only | Entities, value objects, phase rules, domain errors. Pure functions, no I/O. |
+| Application | `src/application/` | `domain/`, `ports/`, `types/` | Use cases. Orchestrates domain + ports. No framework types. |
+| Ports | `src/ports/` | `domain/`, `types/` | TypeScript interfaces that application needs. Implemented by infrastructure. |
+| Infrastructure | `src/infrastructure/` | Everything | DB, HTTP, SDK, FS, child_process. Catches exceptions, converts to Result. |
+| Pipeline | `src/pipeline/` | `application/`, `ports/`, `types/` | Phase handlers called by run-phase use case. |
+| Types | `src/types/` | Nothing | Result<T,E> and other shared primitives. |
+
+**Dependency rule:** `infrastructure → application → domain`. No arrows inward from outer layers.
 
 ## Standard flow (per message)
 
 ```
-HTTP POST /api/threads/:id/messages
-  → runner.ts: load state, determine phase
-  → context/gatherer.ts: read steering + artifacts + repo structure
-  → skills/reader.ts: load skill instruction for current phase
-  → llm/claude.ts: build prompt, call Claude, parse JSON
-  → phase handler: execute actions (write file, git commit, update DB)
-  → SSE stream: send response chunks to UI
+HTTP POST /api/threads/:id/messages          (infrastructure/http)
+  → threads route: parse input, call use case
+  → run-phase (application): load thread, gather context, load skill
+  → phase handler (pipeline): build prompt, call LlmClient port
+  → claude-client (infrastructure): call Anthropic SDK, parse JSON → Result
+  → phase handler: write files via GitClient port, update DB via ThreadRepository
+  → Result unwrapped at route: stream response chunks to UI via SSE
+```
+
+## Composition root (`src/server.ts`)
+
+The only place that instantiates infrastructure implementations and injects them into use cases:
+
+```ts
+const pool   = new Pool({ connectionString: process.env.DATABASE_URL });
+const threads = new PgThreadRepository(pool);
+const llm     = new ClaudeClient(process.env.ANTHROPIC_API_KEY);
+const git     = new GitCliClient(process.env.REPO_PATH);
+// ... inject into use cases, pass to route registration
 ```
 
 ## Volumes (Docker)
 
 - `/repo` — the target repo the agent works on (mounted from `REPO_PATH`)
 - `/skills` — the sdd-skills directory (mounted from `SKILLS_PATH`)
-
-All file reads/writes to the target repo go through `/repo`. All skill/specialist reads go through `/skills`.

@@ -23,3 +23,6 @@ postgres-data/
 
 # Skip installing skills in git — they come from sdd-skills repo
 .claude/skills/
+
+# autoskills installs here — local only, not committed
+.agents/
