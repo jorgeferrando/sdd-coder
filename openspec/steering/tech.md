@@ -22,7 +22,7 @@
 ## Tools
 
 - Package manager: npm
-- Linter/formatter: to be decided at project setup (ESLint + Prettier or Biome)
+- Linter/formatter: Biome 1.9.4 — lint + format, single tool (`biome.json` at project root)
 - Git: all operations via `child_process` (git CLI + gh CLI)
 
 ## Required environment variables
@@ -46,4 +46,7 @@ npm run dev       # tsx src/server.ts
 npm test          # vitest run
 npm run test:int  # vitest run --config vitest.integration.ts
 docker compose up # full stack
+npm run lint      # biome check src/ (read-only)
+npm run fmt       # biome format --write src/
+npm run check     # biome check --write src/ (lint + format)
 ```
