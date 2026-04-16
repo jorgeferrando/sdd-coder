@@ -15,6 +15,7 @@
 
 - **MUST** enable `strict: true` in tsconfig. No exceptions.
 - **MUST NOT** use `any`. Use `unknown` and narrow with type guards.
+  Enforced by Biome rule `suspicious/noExplicitAny` (set to `"error"` in `biome.json`).
 - **MUST NOT** use non-null assertion (`!`) unless the null case is structurally impossible and commented.
 - **SHOULD** prefer `type` over `interface` for object shapes unless extension is needed.
 - **SHOULD** export types from `src/types.ts` when shared across modules.
