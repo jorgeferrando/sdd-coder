@@ -9,7 +9,8 @@
     "test:int": "vitest run --reporter=verbose --config vitest.integration.ts",
     "lint": "biome check --no-errors-on-unmatched src/",
     "fmt": "biome format --write --no-errors-on-unmatched src/",
-    "check": "biome check --write --no-errors-on-unmatched src/"
+    "check": "biome check --write --no-errors-on-unmatched src/",
+    "prepare": "simple-git-hooks"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "latest",
@@ -20,9 +21,13 @@
     "@biomejs/biome": "1.9.4",
     "@types/node": "latest",
     "@types/pg": "latest",
+    "simple-git-hooks": "latest",
     "tsx": "latest",
     "typescript": "^5",
     "vitest": "latest"
+  },
+  "simple-git-hooks": {
+    "pre-commit": "npm run check"
   },
   "vitest": {
     "globals": true,
