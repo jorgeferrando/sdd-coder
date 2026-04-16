@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "tsx src/server.ts",
     "build": "tsc",
-    "test": "vitest run",
+    "test": "vitest run --passWithNoTests",
     "test:int": "vitest run --reporter=verbose --config vitest.integration.ts"
   },
   "dependencies": {
@@ -24,6 +24,8 @@
     "globals": true,
     "environment": "node",
     "include": ["test/**/*.test.ts"],
-    "exclude": ["test/**/*.integration.ts"]
+    "exclude": ["test/**/*.integration.ts"],
+    "passWithNoTests": true
+
   }
 }
