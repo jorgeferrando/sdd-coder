@@ -6,7 +6,10 @@
     "dev": "tsx src/server.ts",
     "build": "tsc",
     "test": "vitest run --passWithNoTests",
-    "test:int": "vitest run --reporter=verbose --config vitest.integration.ts"
+    "test:int": "vitest run --reporter=verbose --config vitest.integration.ts",
+    "lint": "biome check src/",
+    "fmt": "biome format --write src/",
+    "check": "biome check --write src/"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "latest",
@@ -14,6 +17,7 @@
     "pg": "latest"
   },
   "devDependencies": {
+    "@biomejs/biome": "1.9.4",
     "@types/node": "latest",
     "@types/pg": "latest",
     "tsx": "latest",
