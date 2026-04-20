@@ -24,5 +24,8 @@ postgres-data/
 # Skip installing skills in git — they come from sdd-skills repo
 .claude/skills/
 
+# Per-developer Claude Code settings (auth, local overrides)
+.claude/settings.local.json
+
 # autoskills installs here — local only, not committed
 .agents/
