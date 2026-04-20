@@ -15,3 +15,8 @@ Biome lint + format + pre-commit hook. Single tool for linting, formatting, and 
 Docker Compose setup (app + db), PostgreSQL schema, environment variables, and local development workflow for SDD Coder.
 **Entities:** `threads`, `messages`, `docker-compose.yml`, `sql/init.sql`, `Dockerfile`
 **Keywords:** docker, postgres, schema, environment, setup, volumes, init
+
+## http (`specs/http/spec.md`)
+Fastify 5 server surface. Liveness endpoint `GET /health`, default error and not-found handlers, structured pino logging, explicit `0.0.0.0:3000` bind for Docker reachability.
+**Entities:** `src/server.ts`, `GET /health`, `{"status":"ok"}`, `app.listen`, `logger: true`, port `3000`, host `0.0.0.0`
+**Keywords:** fastify, server, health, liveness, endpoint, http, pino, logger, 404, error-handler
